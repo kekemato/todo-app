@@ -17,20 +17,25 @@ class App extends React.Component {
     taskName: ''
   }
 
-  componentWillMount() {
+  loadData() {
     fetch(`${apiURL}/tasks.json`)
-      .then(response => response.json())
-      .then(data => {
-        if (!data) {
-          return
-        }
-        const array = Object.entries(data)
-        const tasksList = array.map(([id, values]) => {
-          values.id = id
-          return values
-        })
-        this.setState({ tasks: tasksList })
+    .then(response => response.json())
+    .then(data => {
+      if (!data) {
+        this.setState({tasks: []})
+        return
+      }
+      const array = Object.entries(data)
+      const tasksList = array.map(([id, values]) => {
+        values.id = id
+        return values
       })
+      this.setState({ tasks: tasksList })
+    })
+  }
+
+  componentWillMount() {
+    this.loadData()
   }
 
   handleChange = (event) => this.setState({ taskName: event.target.value })
@@ -53,11 +58,10 @@ class App extends React.Component {
   }
 
   handleDelete = id => {
-    let tasks = this.state.tasks
     fetch(`${apiURL}/tasks/${id}.json`, {
       method: 'DELETE'
     })
-    this.setState({tasks: tasks.filter(task => id !== task.id)})
+    .then(() => this.loadData())
   }
 
   handleClick = () => this.addTask()
@@ -65,6 +69,14 @@ class App extends React.Component {
   handleKeyDown = event => {
     if (event.keyCode === 13)
       this.addTask()
+  }
+
+  handleCheck = (task) => {
+    fetch(`${apiURL}/tasks/${task.id}.json`, {
+      method: 'PATCH',
+      body: JSON.stringify({completed: !task.completed})
+    })
+    .then(() => this.loadData())
   }
 
   render() {
@@ -92,7 +104,9 @@ class App extends React.Component {
                 primaryText={task.taskName}
                 key={task.id}
                 leftCheckbox={
-                  <Checkbox />}
+                  <Checkbox
+                  defaultChecked={task.completed}
+                  onCheck={() => this.handleCheck(task)}/>}
                 rightIconButton={
                   <IconButton>
                     <DeleteIcon
