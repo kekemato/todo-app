@@ -1,6 +1,10 @@
 import React from 'react'
 import { List, ListItem } from 'material-ui/List'
 
+import DeleteIcon from 'material-ui/svg-icons/action/delete'
+import IconButton from 'material-ui/IconButton'
+import Checkbox from 'material-ui/Checkbox'
+
 import Button from './Button'
 import { TextField } from 'material-ui'
 import Paper from './Paper'
@@ -17,19 +21,21 @@ class App extends React.Component {
     fetch(`${apiURL}/tasks.json`)
       .then(response => response.json())
       .then(data => {
+        if (!data) {
+          return
+        }
         const array = Object.entries(data)
         const tasksList = array.map(([id, values]) => {
           values.id = id
           return values
         })
-        console.log(tasksList)
         this.setState({ tasks: tasksList })
       })
   }
 
   handleChange = (event) => this.setState({ taskName: event.target.value })
 
-  handleClick = () => {
+  addTask = () => {
     if (this.state.taskName !== '') {
       let tasks = this.state.tasks
       let newTask = { taskName: this.state.taskName, completed: false }
@@ -46,6 +52,21 @@ class App extends React.Component {
     }
   }
 
+  handleDelete = id => {
+    let tasks = this.state.tasks
+    fetch(`${apiURL}/tasks/${id}.json`, {
+      method: 'DELETE'
+    })
+    this.setState({tasks: tasks.filter(task => id !== task.id)})
+  }
+
+  handleClick = () => this.addTask()
+
+  handleKeyDown = event => {
+    if (event.keyCode === 13)
+      this.addTask()
+  }
+
   render() {
     return (
       <div>
@@ -55,6 +76,7 @@ class App extends React.Component {
             hintText="Add task"
             onChange={this.handleChange}
             value={this.state.taskName}
+            onKeyDown={this.handleKeyDown}
           >
           </TextField>
           <Button
@@ -65,7 +87,20 @@ class App extends React.Component {
         </Paper>
         <Paper>
           <List>
-            {this.state.tasks.map((task) => (<ListItem primaryText={task.taskName} key={task.id}></ListItem>))}
+            {this.state.tasks.map((task) => (
+              <ListItem
+                primaryText={task.taskName}
+                key={task.id}
+                leftCheckbox={
+                  <Checkbox />}
+                rightIconButton={
+                  <IconButton>
+                    <DeleteIcon
+                      onClick={() => this.handleDelete(task.id)}
+                    />
+                  </IconButton>
+                }>
+              </ListItem>))}
           </List>
         </Paper>
       </div>
