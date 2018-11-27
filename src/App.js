@@ -18,23 +18,28 @@ class App extends React.Component {
       .then(response => response.json())
       .then(data => {
         const array = Object.entries(data)
-        const tasksList = array.map(task => task[1])
+        const tasksList = array.map(([id, values]) => {
+          values.id = id
+          return values
+        })
+        console.log(tasksList)
         this.setState({ tasks: tasksList })
       })
   }
 
   handleChange = (event) => this.setState({ taskName: event.target.value })
 
-  handleClick = (event) => {
+  handleClick = () => {
     if (this.state.taskName !== '') {
       let tasks = this.state.tasks
-      const newTask = { taskName: this.state.taskName, completed: false }
+      let newTask = { taskName: this.state.taskName, completed: false }
       fetch(`${apiURL}/tasks.json`, {
         method: 'POST',
         body: JSON.stringify(newTask)
-      }
-      )
-        .then(() => {
+      })
+        .then(response => response.json())
+        .then(data => {
+          newTask.id = data.name
           tasks.push(newTask)
           this.setState({ tasks, taskName: '' })
         })
@@ -60,7 +65,7 @@ class App extends React.Component {
         </Paper>
         <Paper>
           <List>
-            {this.state.tasks.map((task, index) => (<ListItem primaryText={task.taskName}></ListItem>))}
+            {this.state.tasks.map((task) => (<ListItem primaryText={task.taskName} key={task.id}></ListItem>))}
           </List>
         </Paper>
       </div>
