@@ -5,13 +5,22 @@ import Button from './Button'
 import { TextField } from 'material-ui'
 import Paper from './Paper'
 
+const apiURL = 'https://poniedzialek-26.firebaseio.com'
+
 class App extends React.Component {
   state = {
-    tasks: [
-      { taskName: "Odkurzanie", completed: false },
-      { taskName: "Zmywanie", completed: false }
-    ],
+    tasks: [],
     taskName: ''
+  }
+
+  componentWillMount() {
+    fetch(`${apiURL}/tasks.json`)
+      .then(response => response.json())
+      .then(data => {
+        const array = Object.entries(data)
+        const tasksList = array.map(task => task[1])
+        this.setState({ tasks: tasksList })
+      })
   }
 
   handleChange = (event) => this.setState({ taskName: event.target.value })
@@ -20,13 +29,15 @@ class App extends React.Component {
     if (this.state.taskName !== '') {
       let tasks = this.state.tasks
       const newTask = { taskName: this.state.taskName, completed: false }
-      tasks.push(newTask)
-      this.setState({ tasks, taskName: '' })
-      fetch('https://poniedzialek-26.firebaseio.com/tasks.json', {
+      fetch(`${apiURL}/tasks.json`, {
         method: 'POST',
         body: JSON.stringify(newTask)
       }
       )
+        .then(() => {
+          tasks.push(newTask)
+          this.setState({ tasks, taskName: '' })
+        })
     }
   }
 
