@@ -72,11 +72,11 @@ class App extends React.Component {
   }
 
   handleCheck = (task) => {
+  task.completed = !task.completed
     fetch(`${apiURL}/tasks/${task.id}.json`, {
-      method: 'PATCH',
-      body: JSON.stringify({completed: !task.completed})
+      method: 'PUT',
+      body: JSON.stringify(task)
     })
-    .then(() => this.loadData())
   }
 
   render() {
